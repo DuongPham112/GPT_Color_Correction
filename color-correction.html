@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Color Correction Preset Generator</title>
+    <style>
+        body { font-family: Arial, sans-serif; background: #f5f5f5; padding: 30px; }
+        .container { background: #fff; border-radius: 10px; box-shadow: 0 2px 10px #0001; padding: 30px; max-width: 800px; margin: 0 auto; }
+        h1 { text-align: center; }
+        .slider-group { margin: 20px 0; }
+        .slider-group label { display: block; margin-bottom: 5px; }
+        .slider-group input[type=range] { width: 100%; }
+        .preview { text-align: center; margin: 20px 0; }
+        .preset-list { margin: 20px 0; }
+        .preset-list input { margin-right: 10px; }
+        .btn { background: #2196F3; color: #fff; border: none; border-radius: 5px; padding: 10px 20px; cursor: pointer; margin: 5px; }
+        .btn:hover { background: #1976D2; }
+        textarea { width: 100%; height: 120px; margin-top: 10px; }
+        .color-balance-block { display: flex; gap: 10px; margin-bottom: 10px; }
+        .color-balance-block label { flex: 1; }
+        .curves-block { display: flex; gap: 10px; margin-bottom: 10px; }
+        .curves-block label { flex: 1; }
+        .compare-container { display: flex; gap: 20px; justify-content: center; align-items: flex-start; margin-top: 20px; }
+        .compare-box { text-align: center; }
+        .compare-box h3 { margin-bottom: 8px; font-size: 16px; color: #333; }
+        .import-group { margin: 10px 0; text-align: right; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>Tạo Preset Color Correction</h1>
+    <div class="import-group">
+        <button class="btn" id="loadPresetBtn">Tải preset từ color-presets.json</button>
+        <input type="file" id="importPresetFile" accept="application/json" style="display:none;">
+        <button class="btn" id="importPresetBtn">Import file JSON</button>
+    </div>
+    <div class="slider-group">
+        <label>Tên preset: <input type="text" id="presetName" value="Preset mới"></label>
+    </div>
+    <div class="slider-group">
+        <label>Brightness: <span id="brightnessVal">1</span></label>
+        <input type="range" id="brightness" min="0" max="2" step="0.01" value="1">
+    </div>
+    <div class="slider-group">
+        <label>Contrast: <span id="contrastVal">1</span></label>
+        <input type="range" id="contrast" min="0" max="2" step="0.01" value="1">
+    </div>
+    <div class="slider-group">
+        <label>Saturation: <span id="saturationVal">1</span></label>
+        <input type="range" id="saturation" min="0" max="2" step="0.01" value="1">
+    </div>
+    <div class="slider-group">
+        <label>Hue: <span id="hueVal">0</span></label>
+        <input type="range" id="hue" min="-180" max="180" step="1" value="0">
+    </div>
+    <div class="slider-group">
+        <strong>Color Balance (Shadows, Midtones, Highlights)</strong>
+        <div class="color-balance-block">
+            <label>Shadows R <input type="range" id="cb_shadows_r" min="-100" max="100" value="0"></label>
+            <label>G <input type="range" id="cb_shadows_g" min="-100" max="100" value="0"></label>
+            <label>B <input type="range" id="cb_shadows_b" min="-100" max="100" value="0"></label>
+        </div>
+        <div class="color-balance-block">
+            <label>Midtones R <input type="range" id="cb_midtones_r" min="-100" max="100" value="0"></label>
+            <label>G <input type="range" id="cb_midtones_g" min="-100" max="100" value="0"></label>
+            <label>B <input type="range" id="cb_midtones_b" min="-100" max="100" value="0"></label>
+        </div>
+        <div class="color-balance-block">
+            <label>Highlights R <input type="range" id="cb_highlights_r" min="-100" max="100" value="0"></label>
+            <label>G <input type="range" id="cb_highlights_g" min="-100" max="100" value="0"></label>
+            <label>B <input type="range" id="cb_highlights_b" min="-100" max="100" value="0"></label>
+        </div>
+    </div>
+    <div class="slider-group">
+        <strong>Curves (Gamma)</strong>
+        <div class="curves-block">
+            <label>Gamma R <input type="range" id="gamma_r" min="0.1" max="3" step="0.01" value="1"></label>
+            <label>G <input type="range" id="gamma_g" min="0.1" max="3" step="0.01" value="1"></label>
+            <label>B <input type="range" id="gamma_b" min="0.1" max="3" step="0.01" value="1"></label>
+        </div>
+    </div>
+    <div class="preview">
+        <input type="file" id="upload" accept="image/*">
+        <div class="compare-container">
+            <div class="compare-box">
+                <h3>Ảnh gốc</h3>
+                <canvas id="canvasOriginal" width="300" height="300" style="border-radius:8px; box-shadow:0 2px 8px #0002;"></canvas>
+            </div>
+            <div class="compare-box">
+                <h3>Ảnh chỉnh sửa</h3>
+                <canvas id="canvas" width="300" height="300" style="border-radius:8px; box-shadow:0 2px 8px #0002;"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="preset-list">
+        <h3>Danh sách preset</h3>
+        <ul id="presetList"></ul>
+        <button class="btn" id="addPreset">Thêm preset</button>
+        <button class="btn" id="exportPreset">Export JSON</button>
+    </div>
+    <textarea id="jsonOutput" readonly placeholder="Preset JSON sẽ xuất hiện ở đây..."></textarea>
+</div>
+<script>
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+const canvasOriginal = document.getElementById('canvasOriginal');
+const ctxOriginal = canvasOriginal.getContext('2d');
+let originalImage = null;
+
+function rgbToHsl(r, g, b) {
+    r /= 255; g /= 255; b /= 255;
+    let max = Math.max(r, g, b), min = Math.min(r, g, b);
+    let h, s, l = (max + min) / 2;
+    if (max === min) { h = s = 0; }
+    else {
+        let d = max - min;
+        s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+        switch (max) {
+            case r: h = (g - b) / d + (g < b ? 6 : 0); break;
+            case g: h = (b - r) / d + 2; break;
+            case b: h = (r - g) / d + 4; break;
+        }
+        h /= 6;
+    }
+    return [h, s, l];
+}
+function hslToRgb(h, s, l) {
+    let r, g, b;
+    if (s === 0) { r = g = b = l; }
+    else {
+        function hue2rgb(p, q, t) {
+            if (t < 0) t += 1;
+            if (t > 1) t -= 1;
+            if (t < 1/6) return p + (q - p) * 6 * t;
+            if (t < 1/2) return q;
+            if (t < 2/3) return p + (q - p) * (2/3 - t) * 6;
+            return p;
+        }
+        let q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+        let p = 2 * l - q;
+        r = hue2rgb(p, q, h + 1/3);
+        g = hue2rgb(p, q, h);
+        b = hue2rgb(p, q, h - 1/3);
+    }
+    return [r * 255, g * 255, b * 255];
+}
+function colorCorrect(imageData, params) {
+    const data = imageData.data;
+    const {brightness = 1, contrast = 1, saturation = 1, hue = 0, colorBalance, curves} = params;
+    // Color balance threshold
+    const shadowT = 85, highlightT = 170;
+    for (let i = 0; i < data.length; i += 4) {
+        // Brightness
+        data[i] *= brightness;
+        data[i+1] *= brightness;
+        data[i+2] *= brightness;
+        // Contrast
+        data[i] = (data[i] - 128) * contrast + 128;
+        data[i+1] = (data[i+1] - 128) * contrast + 128;
+        data[i+2] = (data[i+2] - 128) * contrast + 128;
+        // Saturation & Hue
+        let [h, s, l] = rgbToHsl(data[i], data[i+1], data[i+2]);
+        s *= saturation;
+        h += hue/360;
+        if (h > 1) h -= 1; if (h < 0) h += 1;
+        let [r, g, b] = hslToRgb(h, s, l);
+        data[i] = r;
+        data[i+1] = g;
+        data[i+2] = b;
+        // Color Balance
+        if (colorBalance) {
+            const lum = 0.299*r + 0.587*g + 0.114*b;
+            let cb = {r:0,g:0,b:0};
+            if (lum < shadowT) cb = colorBalance.shadows;
+            else if (lum > highlightT) cb = colorBalance.highlights;
+            else cb = colorBalance.midtones;
+            data[i] = Math.min(255, Math.max(0, data[i] + (cb.r||0)));
+            data[i+1] = Math.min(255, Math.max(0, data[i+1] + (cb.g||0)));
+            data[i+2] = Math.min(255, Math.max(0, data[i+2] + (cb.b||0)));
+        }
+        // Curves (gamma)
+        if (curves) {
+            data[i] = 255 * Math.pow(data[i]/255, 1/(curves.r||1));
+            data[i+1] = 255 * Math.pow(data[i+1]/255, 1/(curves.g||1));
+            data[i+2] = 255 * Math.pow(data[i+2]/255, 1/(curves.b||1));
+        }
+    }
+    return imageData;
+}
+
+function updatePreview() {
+    if (!originalImage) return;
+    ctxOriginal.clearRect(0, 0, canvasOriginal.width, canvasOriginal.height);
+    ctxOriginal.drawImage(originalImage, 0, 0, canvasOriginal.width, canvasOriginal.height);
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.drawImage(originalImage, 0, 0, canvas.width, canvas.height);
+    let imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    imageData = colorCorrect(imageData, getCurrentParams());
+    ctx.putImageData(imageData, 0, 0);
+}
+
+function getCurrentParams() {
+    return {
+        brightness: parseFloat(document.getElementById('brightness').value),
+        contrast: parseFloat(document.getElementById('contrast').value),
+        saturation: parseFloat(document.getElementById('saturation').value),
+        hue: parseFloat(document.getElementById('hue').value),
+        colorBalance: {
+            shadows: {
+                r: parseInt(document.getElementById('cb_shadows_r').value),
+                g: parseInt(document.getElementById('cb_shadows_g').value),
+                b: parseInt(document.getElementById('cb_shadows_b').value)
+            },
+            midtones: {
+                r: parseInt(document.getElementById('cb_midtones_r').value),
+                g: parseInt(document.getElementById('cb_midtones_g').value),
+                b: parseInt(document.getElementById('cb_midtones_b').value)
+            },
+            highlights: {
+                r: parseInt(document.getElementById('cb_highlights_r').value),
+                g: parseInt(document.getElementById('cb_highlights_g').value),
+                b: parseInt(document.getElementById('cb_highlights_b').value)
+            }
+        },
+        curves: {
+            r: parseFloat(document.getElementById('gamma_r').value),
+            g: parseFloat(document.getElementById('gamma_g').value),
+            b: parseFloat(document.getElementById('gamma_b').value)
+        }
+    };
+}
+
+// Update slider values
+['brightness','contrast','saturation','hue',
+ 'cb_shadows_r','cb_shadows_g','cb_shadows_b',
+ 'cb_midtones_r','cb_midtones_g','cb_midtones_b',
+ 'cb_highlights_r','cb_highlights_g','cb_highlights_b',
+ 'gamma_r','gamma_g','gamma_b'].forEach(id => {
+    document.getElementById(id).addEventListener('input', updatePreview);
+});
+
+document.getElementById('upload').addEventListener('change', e => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = function(event) {
+        const img = new Image();
+        img.onload = function() {
+            originalImage = img;
+            updatePreview();
+        };
+        img.src = event.target.result;
+    };
+    reader.readAsDataURL(file);
+});
+
+// Preset logic
+let presets = [];
+function renderPresetList() {
+    const ul = document.getElementById('presetList');
+    ul.innerHTML = '';
+    presets.forEach((preset, idx) => {
+        const li = document.createElement('li');
+        li.textContent = preset.name + ' (B:' + preset.brightness + ', C:' + preset.contrast + ', S:' + preset.saturation + ', H:' + preset.hue + ')';
+        const delBtn = document.createElement('button');
+        delBtn.textContent = 'X';
+        delBtn.className = 'btn';
+        delBtn.style.background = '#e74c3c';
+        delBtn.onclick = () => { presets.splice(idx,1); renderPresetList(); };
+        li.appendChild(delBtn);
+        ul.appendChild(li);
+    });
+}
+
+document.getElementById('addPreset').onclick = () => {
+    const name = document.getElementById('presetName').value.trim() || 'Preset mới';
+    const params = getCurrentParams();
+    presets.push({
+        id: name.toLowerCase().replace(/\s+/g,'_'),
+        name,
+        ...params
+    });
+    renderPresetList();
+};
+document.getElementById('exportPreset').onclick = () => {
+    document.getElementById('jsonOutput').value = JSON.stringify(presets, null, 2);
+};
+
+// Tự động load file color-presets.json nếu có
+function loadPresetsFromFile(file) {
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        try {
+            presets = JSON.parse(e.target.result);
+            renderPresetList();
+        } catch (err) {
+            alert('File JSON không hợp lệ!');
+        }
+    };
+    reader.readAsText(file);
+}
+
+document.getElementById('importPresetBtn').onclick = () => {
+    document.getElementById('importPresetFile').click();
+};
+document.getElementById('importPresetFile').addEventListener('change', e => {
+    const file = e.target.files[0];
+    if (file) loadPresetsFromFile(file);
+});
+
+document.getElementById('loadPresetBtn').onclick = () => {
+    fetch('color-presets.json')
+        .then(res => res.json())
+        .then(data => { presets = data; renderPresetList(); })
+        .catch(() => alert('Không tìm thấy file color-presets.json!'));
+};
+
+// Tự động fetch khi mở trang
+window.addEventListener('DOMContentLoaded', () => {
+    fetch('color-presets.json')
+        .then(res => res.json())
+        .then(data => { presets = data; renderPresetList(); });
+});
+</script>
+</body>
+</html> 

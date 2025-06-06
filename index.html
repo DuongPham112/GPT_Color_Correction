@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GPT-Image Tone Correction</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <div class="header-bg" style="position:relative;">
+            <img src="images/corrected.jpg" alt="Header" class="header-img-bg">
+            <h1 class="header-title">GPT-Image Tone Correction</h1>
+        </div>
+        <div><br></div>
+        <div class="upload-section">
+            <input type="file" id="upload" accept="image/*">
+            <label for="upload" class="upload-btn">Chọn ảnh</label>
+        </div>
+        <div class="mode-selector">
+            <select id="correctionMode"></select>
+        </div>
+        <div class="controls">
+            <button id="applyLUT">Áp dụng LUT</button>
+            <button id="download">Tải ảnh về</button>
+        </div>
+        <div class="comparison-container">
+            <div class="comparison-wrapper">
+                <canvas id="canvas"></canvas>
+                <div class="comparison-slider">
+                    <div class="slider-handle">
+                        <div class="slider-line"></div>
+                    </div>
+                </div>
+                <div class="comparison-labels">
+                    <span class="before">Before</span>
+                    <span class="after">After</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    <footer style="text-align:center; margin:30px 0 10px 0; color:#888; font-size:15px;">
+        &copy;2025 Media | ZPS
+    </footer>
+    <script src="webgl-lut-filter.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/glsl-lut@1.0.6/dist/glsl-lut.min.js"></script>
+    <script src="main.js"></script>
+</body>
+</html>

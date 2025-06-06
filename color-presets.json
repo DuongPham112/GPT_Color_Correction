@@ -1,0 +1,122 @@
+[
+  {
+    "id": "standard",
+    "name": "standard",
+    "brightness": 1,
+    "contrast": 1.05,
+    "saturation": 1.04,
+    "hue": 1,
+    "colorBalance": {
+      "shadows": {
+        "r": 2,
+        "g": 1,
+        "b": 13
+      },
+      "midtones": {
+        "r": -2,
+        "g": 3,
+        "b": 12
+      },
+      "highlights": {
+        "r": -6,
+        "g": -1,
+        "b": 14
+      }
+    },
+    "curves": {
+      "r": 0.96,
+      "g": 1,
+      "b": 1.15
+    }
+  },
+  {
+    "id": "vivid",
+    "name": "vivid",
+    "brightness": 1,
+    "contrast": 1.19,
+    "saturation": 1.19,
+    "hue": 1,
+    "colorBalance": {
+      "shadows": {
+        "r": 2,
+        "g": -2,
+        "b": -4
+      },
+      "midtones": {
+        "r": -2,
+        "g": 3,
+        "b": 12
+      },
+      "highlights": {
+        "r": -6,
+        "g": -1,
+        "b": 18
+      }
+    },
+    "curves": {
+      "r": 0.96,
+      "g": 1.03,
+      "b": 1.31
+    }
+  },
+  {
+    "id": "cool",
+    "name": "cool",
+    "brightness": 1.13,
+    "contrast": 0.88,
+    "saturation": 1.05,
+    "hue": 1,
+    "colorBalance": {
+      "shadows": {
+        "r": 0,
+        "g": -2,
+        "b": -19
+      },
+      "midtones": {
+        "r": -13,
+        "g": 3,
+        "b": -9
+      },
+      "highlights": {
+        "r": -13,
+        "g": -1,
+        "b": 8
+      }
+    },
+    "curves": {
+      "r": 0.9,
+      "g": 0.92,
+      "b": 1.42
+    }
+  },
+  {
+    "id": "soft",
+    "name": "soft",
+    "brightness": 1.08,
+    "contrast": 0.87,
+    "saturation": 1.11,
+    "hue": 1,
+    "colorBalance": {
+      "shadows": {
+        "r": 0,
+        "g": 0,
+        "b": 0
+      },
+      "midtones": {
+        "r": 0,
+        "g": 0,
+        "b": 19
+      },
+      "highlights": {
+        "r": 0,
+        "g": 0,
+        "b": 41
+      }
+    },
+    "curves": {
+      "r": 1,
+      "g": 1,
+      "b": 1
+    }
+  }
+]
